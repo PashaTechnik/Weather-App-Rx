@@ -8,6 +8,7 @@
 import UIKit
 import RxSwift
 import RxCocoa
+import GooglePlaces
 
 class SearchViewController: UIViewController {
     @IBOutlet weak var textField: UITextField!
@@ -31,11 +32,10 @@ class SearchViewController: UIViewController {
         }.disposed(by: bag)
         
         
-        tableView.rx.modelSelected(String.self).subscribe(onNext: { item in
-            print("SelectedItem: \(item)")
+        tableView.rx.modelSelected(GMSAutocompletePrediction.self).subscribe(onNext: { item in
+            print("SelectedItem: \(item.attributedFullText)")
         }).disposed(by: bag)
         
-        viewModel.initPlacesResult()
     }
     
 
