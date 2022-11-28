@@ -7,8 +7,31 @@
 
 import Foundation
 
-// MARK: - WeatherDetail
-struct WeatherDetail: Codable, Identifiable {
+
+// MARK: - Result
+struct Result: Codable {
+    let cod: String?
+    let message, cnt: Int?
+    let list: [List]?
+    let city: City?
+    
+    static var placeholder: Self {
+        return Result(cod: nil, message: nil, cnt: nil, list: nil, city: nil)
+    }
+}
+
+
+// MARK: - City
+struct City: Codable {
+    let id: Int
+    let name: String
+    let coord: Coord
+    let country: String
+    let population, timezone, sunrise, sunset: Int
+}
+
+// MARK: - List
+struct List: Codable, Identifiable {
     let coord: Coord?
     let weather: [Weather]?
     let base: String?
@@ -22,10 +45,27 @@ struct WeatherDetail: Codable, Identifiable {
     let name: String?
     let cod: Int?
     
-    static var placeholder: Self {
-        return WeatherDetail(coord: nil, weather: nil, base: nil, main: nil,
-                           visibility: nil, wind: nil, clouds: nil, dt: nil,
-                           sys: nil, id: nil, name: nil, cod: nil)
+    func getDayFromDate() -> String {
+        let date = Date(timeIntervalSince1970: dt!)
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "ru_RU")
+        dateFormatter.dateFormat = "EE"
+        return dateFormatter.string(from: date)
+    }
+    
+    func getHoursFromDate() -> String {
+        let date = Date(timeIntervalSince1970: dt!)
+        let calendar = Calendar.current
+        let hour = calendar.component(.hour, from: date)
+        return String(hour)
+    }
+    
+    func getLocalizedDateFromDate() -> String {
+        let date = Date(timeIntervalSince1970: dt!)
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "ru_RU")
+        dateFormatter.dateFormat = "EE, d MMMM"
+        return dateFormatter.string(from: date)
     }
 }
 
@@ -69,4 +109,16 @@ struct Clouds: Codable {
 struct Wind: Codable {
     let speed: Double?
     let deg: Int?
+}
+
+// MARK: - WeatherModel
+struct WeatherModel {
+    let date: String
+    let minTemperature: Double
+    let maxTemperature: Double
+    let city: String
+    let humidity: String
+    let windSpeed: String
+    let windDirection: String
+    let icon: String
 }

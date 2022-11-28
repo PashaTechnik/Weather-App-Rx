@@ -9,42 +9,21 @@ import Foundation
 import RxSwift
 
 protocol NetworkManagerProtocol {
-    func loadForecastWithCoord(lat: Double, lon: Double, completion: @escaping (WeatherDetail) -> Void)
-    func loadForecastWithCity(city: String, completion: @escaping (WeatherDetail) -> Void)
+    func loadForecastWithCoord(lat: Double, lon: Double) -> Observable<Result>
+    func loadForecastWithCity(city: String) -> Observable<Result>
 }
 
 class NetworkManager: NetworkManagerProtocol {
     
     let disposeBag = DisposeBag()
+    
+    private let baseaseURL = "https://api.openweathermap.org/data/2.5/forecast"
+    private let apiKey = "1f7f0d7b3906c31e1158ca98f1fea4c2"
+    
     private enum Error: Swift.Error {
         case invalidResponse(URLResponse?)
         case invalidJSON(Swift.Error)
     }
-    func loadForecastWithCoord(lat: Double, lon: Double) -> Observable<[WeatherDetail]> {
-
-        guard let request = absoluteURLCoord(lat: lat, lon: lon) else { return Observable.just([]) }
-        return URLSession.shared.rx.response(request: request)
-            .map { result -> Data in
-                guard result.response.statusCode == 200 else {
-                    throw Error.invalidResponse(result.response)
-                }
-                return result.data
-            }.map { data in
-                do {
-                    let posts = try JSONDecoder().decode(
-                        [Post].self, from: data
-                    )
-                    return posts
-                } catch let error {
-                    throw Error.invalidJSON(error)
-                }
-            }
-            .observeOn(MainScheduler.instance)
-            .asObservable()
-   }
-    
-    private let baseaseURL = "https://api.openweathermap.org/data/2.5/forecast"
-    private let apiKey = "1f7f0d7b3906c31e1158ca98f1fea4c2"
     
     private func absoluteURLCoord(lat: Double, lon: Double) -> URL? {
         let queryURL = URL(string: baseaseURL)!
@@ -67,51 +46,37 @@ class NetworkManager: NetworkManagerProtocol {
                                     URLQueryItem(name: "units", value: "metric")]
         return urlComponents.url
     }
-
-    func loadForecastWithCoord(lat: Double, lon: Double, completion: @escaping (WeatherDetail) -> Void) {
-
-        if let url = absoluteURLCoord(lat: lat, lon: lon) {
-            let urlSession = URLSession(configuration: .default).dataTask(with: url) { (data, response, error) in
-                if let error = error {
-                    print(error)
-                }
-                
-                if let data = data {
-                    let decoder = JSONDecoder()
-
-                    guard let result = try? decoder.decode(WeatherDetail.self, from: data) else {
-                        return
-                    }
-                    DispatchQueue.main.async {
-                        completion(result)
-                    }
-                }
-            }
-            urlSession.resume()
-        }
+    
+    
+    func loadForecastWithCoord(lat: Double, lon: Double) -> Observable<Result> {
+        guard let url = absoluteURLCoord(lat: lat, lon: lon) else { return Observable.just(Result.placeholder) }
+        return fetchForecast(url: url)
     }
     
-    func loadForecastWithCity(city: String, completion: @escaping (WeatherDetail) -> Void) {
-
-        if let url = absoluteURLCity(city: city) {
-            let urlSession = URLSession(configuration: .default).dataTask(with: url) { (data, response, error) in
-                if let error = error {
-                    print(error)
+    func loadForecastWithCity(city: String) -> Observable<Result> {
+        guard let url = absoluteURLCity(city: city) else { return Observable.just(Result.placeholder) }
+        return fetchForecast(url: url)
+    }
+    
+    func fetchForecast(url: URL) -> Observable<Result> {
+        return URLSession.shared.rx.response(request: URLRequest(url: url))
+            .map { result -> Data in
+                guard result.response.statusCode == 200 else {
+                    throw Error.invalidResponse(result.response)
                 }
-                
-                if let data = data {
-                    let decoder = JSONDecoder()
-
-                    guard let result = try? decoder.decode(WeatherDetail.self, from: data) else {
-                        return
-                    }
-                    DispatchQueue.main.async {
-                        completion(result)
-                    }
-
+                return result.data
+            }.map { data in
+                do {
+                    let result = try JSONDecoder().decode(
+                        Result.self, from: data
+                    )
+                    return result
+                } catch let error {
+                    throw Error.invalidJSON(error)
                 }
             }
-            urlSession.resume()
-        }
-    }
+            .observe(on: MainScheduler.instance)
+            .asObservable()
+   }
+    
 }

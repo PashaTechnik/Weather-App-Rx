@@ -46,7 +46,6 @@ class SearchViewModel {
                                                             return
                                                         }
                                                         if let results = results {
-                                                            print(results)
                                                             observer.onNext(results)
                                                             observer.onCompleted()
                                                         }
