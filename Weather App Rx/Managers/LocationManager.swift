@@ -13,7 +13,7 @@ import RxSwift
 class LocationManager: NSObject, CLLocationManagerDelegate {
     private let locationManager = CLLocationManager()
 
-    func getCoordinates() -> Observable<CLLocationCoordinate2D> {
+    func getCoordinates() -> CLLocationCoordinate2D {
         self.locationManager.requestAlwaysAuthorization()
 
         self.locationManager.requestWhenInUseAuthorization()
@@ -23,7 +23,7 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
             locationManager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
             locationManager.startUpdatingLocation()
         }
-        guard let locValue: CLLocationCoordinate2D = locationManager.location?.coordinate else { return Observable.just(CLLocationCoordinate2D(latitude: 0, longitude: 0)) }
-        return Observable.just(locValue)
+        guard let locValue: CLLocationCoordinate2D = locationManager.location?.coordinate else { return CLLocationCoordinate2D(latitude: 0, longitude: 0) }
+        return locValue
     }
 }

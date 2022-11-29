@@ -27,20 +27,21 @@ class MainViewController: UIViewController {
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     
     private let bag = DisposeBag()
-    private let viewModel = WeatherViewModel()
+    let viewModel = WeatherViewModel()
   
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        viewModel.initData()
         bindings()
         weatherTableView.rx.setDelegate(self).disposed(by: bag)
+        dayWeatherCollectionView.rx.setDelegate(self).disposed(by: bag)
     }
     
     override func viewWillAppear(_ animated: Bool) {
-        activityIndicator.isHidden = false
-        activityIndicator.startAnimating()
-        darkView.isHidden = false
+        activityIndicator.isHidden = true
+        //activityIndicator.startAnimating()
+        darkView.isHidden = true
     }
 
     private func bindings() {
@@ -52,6 +53,7 @@ class MainViewController: UIViewController {
         viewModel.dayWeatherCellViewModels.bind(to: dayWeatherCollectionView.rx.items(cellIdentifier: DayWeatherCell.identifier, cellType: DayWeatherCell.self)) { (row,item,cell) in
             cell.cellViewModel = item
         }.disposed(by: bag)
+        
         
         viewModel.weatherModel.bind { [weak self] weatherModel in
             guard let self = self else { return }

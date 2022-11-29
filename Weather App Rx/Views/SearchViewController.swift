@@ -32,8 +32,12 @@ class SearchViewController: UIViewController {
         }.disposed(by: bag)
         
         
-        tableView.rx.modelSelected(GMSAutocompletePrediction.self).subscribe(onNext: { item in
-            print("SelectedItem: \(item.attributedFullText)")
+        tableView.rx.modelSelected(GMSAutocompletePrediction.self).subscribe(onNext: { [self] item in
+            let cityName = item.attributedPrimaryText.string
+            navigationController?.popViewController(animated: true)
+            let vc = navigationController?.topViewController as! MainViewController
+            
+            vc.viewModel.cityName.onNext(cityName)
         }).disposed(by: bag)
         
     }
